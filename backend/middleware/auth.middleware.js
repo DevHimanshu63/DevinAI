@@ -11,7 +11,8 @@ export const authUser = async (req, res , next) =>{
             return res.status(401).json({msg: 'Token is blacklisted'});
         }
         const decoded = jwt.verify(token, process.env.JWT_TOKEN);
-        req.user = decoded;
+        console.log('Decoded user data:', decoded);
+        req.user = decoded; 
         next();
     }catch(err){
         res.status(401).json({msg: 'Token is not valid'});

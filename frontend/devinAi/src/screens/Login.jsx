@@ -1,10 +1,24 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Link , useNavigate } from 'react-router-dom';
+import axios from '../config.js/axios.js';
+import {userContext}  from '../context/user.context.jsx'
 const Login = () => {
-
+    const { setUser } = useContext(userContext);
+    const navigate = useNavigate() ;
+    const [email, setEmail] = React.useState('');
+    const [password, setPassword] = React.useState('');
     const handleLogin = (e) => {
         e.preventDefault();
-        // Add login functionality here
+        axios.post('/login', {email , password }).then((res) => {
+            console.log(res.data)
+            localStorage.setItem('token', res.data.token);
+            setUser(res?.data?.user)
+            navigate('/')
+        }).catch((err) => {
+            console.log(err)
+        })
+
+       
     };
 
     const navigateToSignup = () => {
@@ -19,6 +33,7 @@ const Login = () => {
                     <div className="mb-4">
                         <label className="block text-gray-300 mb-2" htmlFor="email">Email</label>
                         <input
+                        onChange={(e) => setEmail(e.target.value)}
                             type="email"
                             id="email"
                             className="w-full p-2 rounded bg-gray-700 text-white"
@@ -28,6 +43,7 @@ const Login = () => {
                     <div className="mb-6">
                         <label className="block text-gray-300 mb-2" htmlFor="password">Password</label>
                         <input
+                        onChange={(e) => setPassword(e.target.value)}
                             type="password"
                             id="password"
                             className="w-full p-2 rounded bg-gray-700 text-white"
