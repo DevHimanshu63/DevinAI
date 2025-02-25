@@ -29,4 +29,29 @@ const getAllProjects = async({userId})=>{
     const projects = await projectModel.find({users:userId});
     return projects;
 }
-export  {createProject , getAllProjects};
+
+const addUserToProjects = async ({projectId , users , userId})=>{
+    if(!projectId || !users){
+        throw new Error(`All fields are required ${projectId} || ${users}`);
+    }
+    const project = await projectModel.findOne({
+        _id:projectId,
+        users:userId
+    });
+    if(!project){
+        throw new Error(`Project with id ${projectId} not found`);
+    }
+    const updatedProject = await projectModel.findByIdAndUpdate({
+        _id:projectId
+    },{
+        $addToSet:{
+            users:{
+                $each:users
+            }
+        }
+    },{new:true});
+    return updatedProject;
+   
+     
+}
+export  {createProject , getAllProjects , addUserToProjects};
