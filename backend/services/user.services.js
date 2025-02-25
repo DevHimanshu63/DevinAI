@@ -13,3 +13,13 @@ export const createUser = async({email , password})=>{
     await user.save();
     return user ;
 }
+
+export const getAlluser = async({userId})=>{
+    if(!userId){
+        throw new Error('User id is required');
+    }
+    const users = await userModel.find({
+        _id:{$ne:userId}
+    });
+    return users;
+}

@@ -54,4 +54,17 @@ const addUserToProjects = async ({projectId , users , userId})=>{
    
      
 }
-export  {createProject , getAllProjects , addUserToProjects};
+
+const getProjectByIds = async ({projectId})=>{
+    if(!projectId){
+        throw new Error(`All fields are required ${projectId}`);
+    }
+    const project = await projectModel.findOne({
+        _id:projectId,
+    }).populate('users');
+    if(!project){
+        throw new Error(`Project with id ${projectId} not found`);
+    }
+    return project;
+}
+export  {createProject , getAllProjects , addUserToProjects , getProjectByIds};

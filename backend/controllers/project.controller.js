@@ -1,4 +1,4 @@
-import  {createProject as createProjectService , getAllProjects , addUserToProjects} from "../services/project.service.js"
+import  {createProject as createProjectService , getAllProjects , addUserToProjects , getProjectByIds} from "../services/project.service.js"
 import userModel from '../models/user.model.js'
 import { validationResult } from "express-validator";
 
@@ -55,4 +55,19 @@ const addUserToProject = async (req, res) => {
    
 }
 
-export  {createProject ,  getAllProject , addUserToProject};
+const getProjectById = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try{
+        const {projectId} = req.params;
+        const project = await getProjectByIds({projectId});
+        return res.status(200).json({project});
+    }catch(err){
+        console.log(err);
+        res.status(400).json({error: err.message});
+    }
+}
+
+export  {createProject ,  getAllProject , addUserToProject , getProjectById};

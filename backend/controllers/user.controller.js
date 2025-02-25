@@ -59,3 +59,17 @@ export const logoutController = async (req, res) => {
     console.log(err);
   }
 }
+
+export const getAllUsersController = async (req, res) => {
+  try{
+   const loggedInUser = await userModel.findOne({
+    email: req.user.email
+   })
+   console.log("logged in user", loggedInUser);
+   
+   const allUsers = await userServices.getAlluser({userId:loggedInUser._id});
+   res.status(200).json({users:allUsers});
+  }catch(err){
+    console.log(err);
+  }
+}

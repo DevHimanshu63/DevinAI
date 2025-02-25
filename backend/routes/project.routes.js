@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body } from "express-validator";
-import  {createProject ,  getAllProject , addUserToProject} from '../controllers/project.controller.js'
+import  {createProject ,  getAllProject , addUserToProject , getProjectById} from '../controllers/project.controller.js'
 import  { authUser } from '../middleware/auth.middleware.js'
 const router = Router();
 
@@ -26,4 +26,8 @@ router.put('/add-user',
     addUserToProject
 )
 
+router.get('/get-project/:projectId',
+    authUser,
+   getProjectById
+)
 export default router;
