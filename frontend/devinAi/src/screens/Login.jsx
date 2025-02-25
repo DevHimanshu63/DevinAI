@@ -9,7 +9,7 @@ const Login = () => {
     const [password, setPassword] = React.useState('');
     const handleLogin = (e) => {
         e.preventDefault();
-        axios.post('/login', {email , password }).then((res) => {
+        axios.post('/users/login', {email , password }).then((res) => {
             console.log(res.data)
             localStorage.setItem('token', res.data.token);
             setUser(res?.data?.user)
