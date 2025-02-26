@@ -35,10 +35,10 @@ function Home() {
         <div className='p-4 flex flex-wrap items-center gap-4'>
             <div className=''>
                 <button 
-                    className='p-4 border border-slate-300 rounded-md'
+                    className='p-4 bg-blue-500 text-white border border-slate-300 rounded-md'
                     onClick={() => setIsModelOpen(true)}
                 >
-                   <p className='font-medium text-lg'>Create project  <i className="ri-link"></i></p>
+                   <p className='font-medium text-lg '>Create project  <i className="ri-link"></i></p>
                 </button>
             </div>
             {
