@@ -42,10 +42,12 @@ io.on('connection', socket => {
 //   client.on('event', data => { 
 
 //   });
-//   client.on('disconnect', () => { 
-
+//   socket.on('disconnect', () => { 
+//     console.log('user disconnected');
+//     socket.leave(socket.roomId); 
 //    });
 });
+
 
 
 server.listen(PORT,()=>{

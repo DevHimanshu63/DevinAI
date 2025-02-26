@@ -85,6 +85,9 @@ function Project() {
     appendOutgoingMessage(message)
     setMessage("");
   };
+  const scrollToBottom = () => {
+    messageboxRef.current.scrollTo(0, messageboxRef.current.scrollHeight);
+  }
 
   const appendIncomingMessage = (messageObj) => {
     console.log('appendIncomingMessageObj', messageObj);
@@ -96,6 +99,7 @@ function Project() {
     `<small class="opacity-65 text-xs">${messageObj.sender.email}</small>
     <p class="text-sm">${messageObj.message}</p>`;
     messageBox.appendChild(message);
+    scrollToBottom()
   }
   
   const appendOutgoingMessage = (messageText) => {
@@ -108,6 +112,7 @@ function Project() {
       <p class="text-sm">${messageText}</p>
     `;
     messageBox.appendChild(newMessage);
+    scrollToBottom()
   };
   
   return (
@@ -127,16 +132,8 @@ function Project() {
         </header>
 
         <div className="conversationArea flex-grow flex flex-col">
-          <div ref={messageboxRef} className="messagebox p-1 flex-grow flex gap-4 flex-col">
-            <div className="incomingMessage max-w-56 flex flex-col p-2 bg-slate-50 w-fit rounded-md">
-              <small className="opacity-65 text-xs">himanshu@molog.in</small>
-              <p className="text-sm">hello</p>
-            </div>
-
-            <div className="incomingMessage max-w-56 ml-auto flex flex-col p-2 bg-slate-50 w-fit rounded-md">
-              <small className="opacity-65 text-xs">himanshu@molog.in</small>
-              <p className="text-sm">hello lorem56</p>
-            </div>
+          <div ref={messageboxRef} className="messagebox overflow-auto max-h-full p-1 flex-grow flex gap-4 flex-col">
+            {/*  */}
           </div>
           <div className="inputBox w-full flex">
             <input

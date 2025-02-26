@@ -6,6 +6,7 @@ import userRoutes from './routes/user.routes.js'
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import projectRoutes from "./routes/project.routes.js"
+import ai from './routes/ai.routes.js'
 connectDB()
 const app = express()
 app.use(cors());
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use('/users', userRoutes)
 app.use('/project', projectRoutes)
+app.use('/ai',ai)
 
 app.get('/', (req, res) =>{
     res.send('Welcome to the Node.js API!')
