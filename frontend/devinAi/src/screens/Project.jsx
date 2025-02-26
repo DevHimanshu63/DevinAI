@@ -1,17 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext, useRef, createRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "../config.js/axios";
+import {
+  intializeSocket,
+  recieveMessage,
+  sendMessage,
+} from "../config.js/socket.js";
+import { userContext } from "../context/user.context.jsx";
 function Project() {
   const navigate = useNavigate();
   const location = useLocation();
   //   console.log(location.state.project)
-  const [isSidePanel, setIsSidePanel] = useState(false);
+  const [isSidePanel, setIsSidePanel] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState([]);
   const [users, setUsers] = useState([]);
   const [project, setProject] = useState(location.state.project);
-
+  const [message, setMessage] = useState("");
+  const { user } = useContext(userContext);
+  const messageboxRef = createRef();
   useEffect(() => {
+    intializeSocket(project._id);
+
+    recieveMessage("project-message", (data) => {
+      console.log(data);
+      appendIncomingMessage(data)
+    });
+
     axios
       .get(`/project/get-project/${location.state.project._id}`)
       .then((res) => {
@@ -63,6 +78,38 @@ function Project() {
       });
   };
 
+  const send = () => {
+    console.log('when click on send ', user);
+    
+    sendMessage("project-message", { message, sender: user });
+    appendOutgoingMessage(message)
+    setMessage("");
+  };
+
+  const appendIncomingMessage = (messageObj) => {
+    console.log('appendIncomingMessageObj', messageObj);
+    
+    const messageBox = document.querySelector(".messagebox");
+    const message = document.createElement("div");
+    message.classList.add("incomingMessage", "max-w-56", "flex", "flex-col", "p-2", "bg-slate-50", "w-fit", "rounded-md");
+    message.innerHTML = 
+    `<small class="opacity-65 text-xs">${messageObj.sender.email}</small>
+    <p class="text-sm">${messageObj.message}</p>`;
+    messageBox.appendChild(message);
+  }
+  
+  const appendOutgoingMessage = (messageText) => {
+    console.log('appendOutgoingMessageObj', messageText);
+    const messageBox = document.querySelector(".messagebox");
+    const newMessage = document.createElement("div");
+    newMessage.classList.add("outgoingMessage", "max-w-56", "ml-auto", "flex", "flex-col", "p-2", "bg-blue-200", "w-fit", "rounded-md");
+    newMessage.innerHTML = `
+      <small class="opacity-65 text-xs">${user.email}</small>
+      <p class="text-sm">${messageText}</p>
+    `;
+    messageBox.appendChild(newMessage);
+  };
+  
   return (
     <main className="h-screen w-screen flex">
       <section className="flex flex-col left h-full min-w-[22rem] bg-slate-300">
@@ -80,7 +127,7 @@ function Project() {
         </header>
 
         <div className="conversationArea flex-grow flex flex-col">
-          <div className="messagebox p-1 flex-grow flex gap-4 flex-col">
+          <div ref={messageboxRef} className="messagebox p-1 flex-grow flex gap-4 flex-col">
             <div className="incomingMessage max-w-56 flex flex-col p-2 bg-slate-50 w-fit rounded-md">
               <small className="opacity-65 text-xs">himanshu@molog.in</small>
               <p className="text-sm">hello</p>
@@ -93,19 +140,21 @@ function Project() {
           </div>
           <div className="inputBox w-full flex">
             <input
+              onChange={(e) => setMessage(e.target.value)}
               className="p-2 flex-grow px-4 border-none outline-none"
               type="text"
+              value={message}
               placeholder="Enter Message"
             />
-            <button className="px-5">
+            <button className="px-5" onClick={send}>
               <i className="ri-send-plane-fill"></i>
             </button>
           </div>
         </div>
 
         <div
-          className={`sidePanel flex flex-col gap-2 w-[22rem] h-full bg-red-50 absolute left-[-100%] top-0 transition-all ${
-            isSidePanel ? "left-0" : ""
+          className={`sidePanel flex flex-col gap-2 w-[22rem] h-full bg-red-50 absolute top-0 transition-all duration-300 ease-in-out ${
+            isSidePanel ? "left-[-100%]" : "left-0"
           }`}
         >
           <header className="flex items-center justify-between p-4 bg-slate-200">
@@ -130,7 +179,7 @@ function Project() {
                   <h1 className="font-semibold text-lg text-gray-800">
                     {user.email}
                   </h1>
-                  <p className="text-sm text-gray-600">{user.name}</p>{" "}
+                  <p className="text-sm text-gray-600">{user.name}</p>
                 </div>
               </div>
             ))}

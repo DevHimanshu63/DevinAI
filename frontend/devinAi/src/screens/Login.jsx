@@ -3,7 +3,7 @@ import { Link , useNavigate } from 'react-router-dom';
 import axios from '../config.js/axios.js';
 import {userContext}  from '../context/user.context.jsx'
 const Login = () => {
-    const { setUser } = useContext(userContext);
+    const { user,setUser } = useContext(userContext);
     const navigate = useNavigate() ;
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');

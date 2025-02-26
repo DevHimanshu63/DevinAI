@@ -10,11 +10,11 @@ const createProject =async (req , res)=>{
     }
 
     try{
-        console.log('data recived from client for creating project',req.body , req.user.email);
+        // console.log('data recived from client for creating project',req.body , req.user.email);
 
         const {name} = req.body;
         const loggedInUser = await userModel.findOne({email:req.user.email});
-        console.log("logged in user", loggedInUser);
+        // console.log("logged in user", loggedInUser);
         
         const newProject = await createProjectService({name, userId:loggedInUser._id});
         
@@ -25,7 +25,7 @@ const createProject =async (req , res)=>{
     }
 }
 
-const  getAllProject = async (req, res) => {
+const getAllProject = async (req, res) => {
     try{
         const loggedInUser = await userModel.findOne({email:req.user.email});
         console.log("logged in user", loggedInUser);
