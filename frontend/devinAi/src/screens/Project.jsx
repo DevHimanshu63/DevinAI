@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useContext, useRef, createRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useRef,
+  createRef,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "../config.js/axios";
 import {
@@ -7,6 +13,7 @@ import {
   sendMessage,
 } from "../config.js/socket.js";
 import { userContext } from "../context/user.context.jsx";
+import MarkDown from 'markdown-to-jsx'
 function Project() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,7 +31,7 @@ function Project() {
 
     recieveMessage("project-message", (data) => {
       console.log(data);
-      appendIncomingMessage(data)
+      appendIncomingMessage(data);
     });
 
     axios
@@ -79,42 +86,60 @@ function Project() {
   };
 
   const send = () => {
-    console.log('when click on send ', user);
-    
+    console.log("when click on send ", user);
+
     sendMessage("project-message", { message, sender: user });
-    appendOutgoingMessage(message)
+    appendOutgoingMessage(message);
     setMessage("");
   };
   const scrollToBottom = () => {
     messageboxRef.current.scrollTo(0, messageboxRef.current.scrollHeight);
-  }
+  };
 
   const appendIncomingMessage = (messageObj) => {
-    console.log('appendIncomingMessageObj', messageObj);
-    
+    console.log("appendIncomingMessageObj", messageObj);
+
     const messageBox = document.querySelector(".messagebox");
     const message = document.createElement("div");
-    message.classList.add("incomingMessage", "max-w-56", "flex", "flex-col", "p-2", "bg-slate-50", "w-fit", "rounded-md");
-    message.innerHTML = 
-    `<small class="opacity-65 text-xs">${messageObj.sender.email}</small>
+    message.classList.add(
+      "incomingMessage",
+      "max-w-56",
+      "flex",
+      "flex-col",
+      "p-2",
+      "bg-slate-50",
+      "w-fit",
+      "rounded-md"
+    );
+    message.innerHTML = `<small class="opacity-65 text-xs">${messageObj.sender.email}</small>
     <p class="text-sm">${messageObj.message}</p>`;
     messageBox.appendChild(message);
-    scrollToBottom()
-  }
-  
+    scrollToBottom();
+  };
+
   const appendOutgoingMessage = (messageText) => {
-    console.log('appendOutgoingMessageObj', messageText);
+    console.log("appendOutgoingMessageObj", messageText);
     const messageBox = document.querySelector(".messagebox");
     const newMessage = document.createElement("div");
-    newMessage.classList.add("outgoingMessage", "max-w-56", "ml-auto", "flex", "flex-col", "p-2", "bg-blue-200", "w-fit", "rounded-md");
+    newMessage.classList.add(
+      "outgoingMessage",
+      "max-w-56",
+      "ml-auto",
+      "flex",
+      "flex-col",
+      "p-2",
+      "bg-blue-200",
+      "w-fit",
+      "rounded-md"
+    );
     newMessage.innerHTML = `
       <small class="opacity-65 text-xs">${user.email}</small>
       <p class="text-sm">${messageText}</p>
     `;
     messageBox.appendChild(newMessage);
-    scrollToBottom()
+    scrollToBottom();
   };
-  
+
   return (
     <main className="h-screen w-screen flex">
       <section className="flex flex-col left h-full min-w-[22rem] bg-slate-300">
@@ -132,9 +157,14 @@ function Project() {
         </header>
 
         <div className="conversationArea flex-grow flex flex-col">
-          <div ref={messageboxRef} className="messagebox overflow-auto max-h-full p-1 flex-grow flex gap-4 flex-col">
-            {/*  */}
+          {/* Make the messagebox scrollable */}
+          <div
+            ref={messageboxRef}
+            className="messagebox overflow-y-auto max-h-[calc(100vh-7rem)] p-1 flex-grow flex gap-4 flex-col"
+          >
+            {/* Messages will be appended here */}
           </div>
+
           <div className="inputBox w-full flex">
             <input
               onChange={(e) => setMessage(e.target.value)}
