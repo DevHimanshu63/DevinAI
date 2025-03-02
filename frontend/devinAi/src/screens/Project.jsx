@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useContext,
-  useRef,
-  createRef,
-} from "react";
+import React, { useEffect, useState, useContext, createRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "../config.js/axios";
 import {
@@ -13,24 +7,39 @@ import {
   sendMessage,
 } from "../config.js/socket.js";
 import { userContext } from "../context/user.context.jsx";
-import MarkDown from 'markdown-to-jsx'
+import MarkDown from "markdown-to-jsx";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
+
 function Project() {
   const navigate = useNavigate();
   const location = useLocation();
-  //   console.log(location.state.project)
   const [isSidePanel, setIsSidePanel] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState([]);
   const [users, setUsers] = useState([]);
   const [project, setProject] = useState(location.state.project);
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [fileTree, setfileTree] = useState({
+    "app.js": {
+      content: "const express = require('express')",
+    },
+    "package.json": {
+      content: "temp-server",
+    },
+  });
+  const [currentFile, setCurrentFile] = useState(null);
+  const [openFiles, setopenFiles] = useState([]);
   const { user } = useContext(userContext);
   const messageboxRef = createRef();
+
   useEffect(() => {
     intializeSocket(project._id);
 
+    
     recieveMessage("project-message", (data) => {
-      console.log(data);
+      console.log('recieveMessage',data);
       appendIncomingMessage(data);
     });
 
@@ -88,61 +97,56 @@ function Project() {
   const send = () => {
     console.log("when click on send ", user);
 
-    sendMessage("project-message", { message, sender: user });
-    appendOutgoingMessage(message);
+    const newMessage = { message, sender: user };
+    sendMessage("project-message", newMessage);
+    appendOutgoingMessage(newMessage);
     setMessage("");
   };
-  const scrollToBottom = () => {
-    messageboxRef.current.scrollTo(0, messageboxRef.current.scrollHeight);
+
+  const writeAiMessage = (msg) => {
+    const messageObject = JSON.parse(msg);
+    console.log("messageObject writeai", messageObject);
+
+    return (
+      <div className="bg-slate-950 text-white overflow-auto rounded-sm p-2">
+        <MarkdownWithSyntaxHighlighting>
+          {messageObject.text}
+        </MarkdownWithSyntaxHighlighting>
+      </div>
+    );
   };
 
   const appendIncomingMessage = (messageObj) => {
     console.log("appendIncomingMessageObj", messageObj);
-
-    const messageBox = document.querySelector(".messagebox");
-    const message = document.createElement("div");
-    message.classList.add(
-      "incomingMessage",
-      "max-w-56",
-      "flex",
-      "flex-col",
-      "p-2",
-      "bg-slate-50",
-      "w-fit",
-      "rounded-md"
-    );
-    message.innerHTML = `<small class="opacity-65 text-xs">${messageObj.sender.email}</small>
-    <p class="text-sm">${messageObj.message}</p>`;
-    messageBox.appendChild(message);
-    scrollToBottom();
+    setMessages((prevMessages) => [...prevMessages, messageObj]);
   };
 
-  const appendOutgoingMessage = (messageText) => {
-    console.log("appendOutgoingMessageObj", messageText);
-    const messageBox = document.querySelector(".messagebox");
-    const newMessage = document.createElement("div");
-    newMessage.classList.add(
-      "outgoingMessage",
-      "max-w-56",
-      "ml-auto",
-      "flex",
-      "flex-col",
-      "p-2",
-      "bg-blue-200",
-      "w-fit",
-      "rounded-md"
-    );
-    newMessage.innerHTML = `
-      <small class="opacity-65 text-xs">${user.email}</small>
-      <p class="text-sm">${messageText}</p>
-    `;
-    messageBox.appendChild(newMessage);
-    scrollToBottom();
+  const appendOutgoingMessage = (messageObj) => {
+    console.log("appendOutgoingMessageObj", messageObj);
+    setMessages((prevMessages) => [...prevMessages, messageObj]);
   };
+
+  const MarkdownWithSyntaxHighlighting = ({ children }) => (
+    <MarkDown
+      options={{
+        overrides: {
+          code: {
+            component: SyntaxHighlighter,
+            props: {
+              style: darcula,
+            },
+          },
+        },
+      }}
+    >
+      {children}
+    </MarkDown>
+  );
+console.log(openFiles , currentFile);
 
   return (
     <main className="h-screen w-screen flex">
-      <section className="flex flex-col left h-full min-w-[22rem] bg-slate-300">
+      <section className="flex flex-col left h-full min-w-[23rem] bg-slate-300">
         <header className="flex justify-between items-center p-4 w-full bg-slate-100">
           <button className="p-2 px-4 flex gap-2" onClick={openModal}>
             <i className="ri-user-add-line"></i>
@@ -157,12 +161,27 @@ function Project() {
         </header>
 
         <div className="conversationArea flex-grow flex flex-col">
-          {/* Make the messagebox scrollable */}
           <div
             ref={messageboxRef}
             className="messagebox overflow-y-auto max-h-[calc(100vh-7rem)] p-1 flex-grow flex gap-4 flex-col"
           >
-            {/* Messages will be appended here */}
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`message max-w-[21rem] flex flex-col p-2 w-fit rounded-md ${
+                  msg.sender._id === user._id
+                    ? "ml-auto bg-blue-200"
+                    : "bg-slate-50"
+                }`}
+              >
+                <small className="opacity-65 text-xs">{msg.sender.email}</small>
+                <p className="text-sm">
+                  {msg.sender._id === "ai"
+                    ? writeAiMessage(msg.message)
+                    : msg.message}
+                </p>
+              </div>
+            ))}
           </div>
 
           <div className="inputBox w-full flex">
@@ -212,6 +231,49 @@ function Project() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="right bg-red-200 flex-grow h-full flex ">
+        <div className="explorer h-full cursor-pointer min-w-52 max-w-64 bg-slate-700">
+          <div className="file-tree w-full cursor-pointer ">
+            {Object.keys(fileTree).map((file, index) => (
+              <button
+                onClick={() => {
+                    setCurrentFile(file)
+                    setopenFiles([...new Set([...openFiles, file])])
+                }}
+                className="tree-element border border-slate-600 cursor-pointer p-2 px-4 flex items-center gap-2 bg-slate-200 w-full "
+              >
+                <p className=" text-lg font-semibold">{file}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+        {currentFile && (
+          <div className="code-editor flex flex-col flex-grow h-full">
+            <div className="top flex">
+                {openFiles.map((file, index) => (
+                    <button 
+                    onClick={() => setCurrentFile(file)}
+                    className={`p-2 px-4 flex items-center gap-2 bg-slate-200 w-fit border ${currentFile === file ? "bg-slate-400":''} `}
+                    >
+                        <p>{file}</p>
+                    </button>
+                ))}
+            </div>
+            <div className="bottom h-full">
+                    {
+                        fileTree[currentFile] && (
+                            <textarea 
+                            className="w-full h-full p-4 bg-slate-50" 
+                            value={fileTree[currentFile].content} 
+                            onChange={(e) => setfileTree({...fileTree, [currentFile]: {...fileTree[currentFile], content: e.target.value}})}
+                            />
+                        )
+                    }
+            </div>
+          </div>
+        )}
       </section>
 
       {isModalOpen && (
