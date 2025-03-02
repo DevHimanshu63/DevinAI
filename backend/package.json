@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@google/generative-ai": "^0.22.0",
+    "@webcontainer/api": "^1.5.1-internal.9",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

@@ -10,7 +10,7 @@ import { userContext } from "../context/user.context.jsx";
 import MarkDown from "markdown-to-jsx";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
-
+import {getWebContainer} from '../config.js/WebContainer.js'
 function Project() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,26 +21,32 @@ function Project() {
   const [project, setProject] = useState(location.state.project);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [fileTree, setfileTree] = useState({
-    "app.js": {
-      content: "const express = require('express')",
-    },
-    "package.json": {
-      content: "temp-server",
-    },
-  });
+  const [fileTree, setfileTree] = useState({});
   const [currentFile, setCurrentFile] = useState(null);
   const [openFiles, setopenFiles] = useState([]);
+  const [WebContainer , setWebContainer] = useState(null);
   const { user } = useContext(userContext);
   const messageboxRef = createRef();
 
   useEffect(() => {
     intializeSocket(project._id);
-
     
+    if(!WebContainer){
+        getWebContainer().then((container) => {
+          setWebContainer(container);
+          console.log('container started');
+        });
+    }
+
     recieveMessage("project-message", (data) => {
-      console.log('recieveMessage',data);
-      appendIncomingMessage(data);
+      console.log("recieveMessage", data);
+
+      setMessages((prevMessages) => [...prevMessages, data]);
+      const message = JSON.parse(data.message);
+      WebContainer?.mount(message.fileTree)
+      if (message.fileTree) {
+        setfileTree(message.fileTree);
+      }
     });
 
     axios
@@ -96,7 +102,6 @@ function Project() {
 
   const send = () => {
     console.log("when click on send ", user);
-
     const newMessage = { message, sender: user };
     sendMessage("project-message", newMessage);
     appendOutgoingMessage(newMessage);
@@ -115,11 +120,12 @@ function Project() {
       </div>
     );
   };
+  console.log(fileTree);
 
-  const appendIncomingMessage = (messageObj) => {
-    console.log("appendIncomingMessageObj", messageObj);
-    setMessages((prevMessages) => [...prevMessages, messageObj]);
-  };
+  //   const appendIncomingMessage = (messageObj) => {
+  //     console.log("appendIncomingMessageObj", messageObj);
+  //     setMessages((prevMessages) => [...prevMessages, messageObj]);
+  //   };
 
   const appendOutgoingMessage = (messageObj) => {
     console.log("appendOutgoingMessageObj", messageObj);
@@ -142,7 +148,6 @@ function Project() {
       {children}
     </MarkDown>
   );
-console.log(openFiles , currentFile);
 
   return (
     <main className="h-screen w-screen flex">
@@ -239,8 +244,8 @@ console.log(openFiles , currentFile);
             {Object.keys(fileTree).map((file, index) => (
               <button
                 onClick={() => {
-                    setCurrentFile(file)
-                    setopenFiles([...new Set([...openFiles, file])])
+                  setCurrentFile(file);
+                  setopenFiles([...new Set([...openFiles, file])]);
                 }}
                 className="tree-element border border-slate-600 cursor-pointer p-2 px-4 flex items-center gap-2 bg-slate-200 w-full "
               >
@@ -252,25 +257,23 @@ console.log(openFiles , currentFile);
         {currentFile && (
           <div className="code-editor flex flex-col flex-grow h-full">
             <div className="top flex">
-                {openFiles.map((file, index) => (
-                    <button 
-                    onClick={() => setCurrentFile(file)}
-                    className={`p-2 px-4 flex items-center gap-2 bg-slate-200 w-fit border ${currentFile === file ? "bg-slate-400":''} `}
-                    >
-                        <p>{file}</p>
-                    </button>
-                ))}
+              {openFiles.map((file, index) => (
+                <button
+                  onClick={() => setCurrentFile(file)}
+                  className={`p-2 px-4 flex items-center gap-2 bg-slate-200 w-fit border ${
+                    currentFile === file ? "bg-slate-400" : ""
+                  } `}
+                >
+                  <p>{file}</p>
+                </button>
+              ))}
             </div>
-            <div className="bottom h-full">
-                    {
-                        fileTree[currentFile] && (
-                            <textarea 
-                            className="w-full h-full p-4 bg-slate-50" 
-                            value={fileTree[currentFile].content} 
-                            onChange={(e) => setfileTree({...fileTree, [currentFile]: {...fileTree[currentFile], content: e.target.value}})}
-                            />
-                        )
-                    }
+            <div className="bottom h-full overflow-auto flex-grow bg-slate-50">
+            {fileTree[currentFile] && (
+                <SyntaxHighlighter language="javascript" style={darcula}>
+                  {fileTree[currentFile].file.contents}
+                </SyntaxHighlighter>
+            )}
             </div>
           </div>
         )}
