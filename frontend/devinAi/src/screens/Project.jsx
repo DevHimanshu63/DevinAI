@@ -25,6 +25,8 @@ function Project() {
   const [currentFile, setCurrentFile] = useState(null);
   const [openFiles, setopenFiles] = useState([]);
   const [WebContainer , setWebContainer] = useState(null);
+  const [runProcess , setRunProcess] = useState(false);
+  const [iframeUrl , setiframeUrl] = useState(null);
   const { user } = useContext(userContext);
   const messageboxRef = createRef();
 
@@ -40,7 +42,6 @@ function Project() {
 
     recieveMessage("project-message", (data) => {
       console.log("recieveMessage", data);
-
       setMessages((prevMessages) => [...prevMessages, data]);
       const message = JSON.parse(data.message);
       WebContainer?.mount(message.fileTree)
@@ -68,6 +69,7 @@ function Project() {
         console.log(err);
       });
   }, []);
+console.log(runProcess);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -254,9 +256,10 @@ function Project() {
             ))}
           </div>
         </div>
-        {currentFile && (
+        
           <div className="code-editor flex flex-col flex-grow h-full">
-            <div className="top flex">
+            <div className="top flex justify-between">
+             <div className="files flex">
               {openFiles.map((file, index) => (
                 <button
                   onClick={() => setCurrentFile(file)}
@@ -267,6 +270,41 @@ function Project() {
                   <p>{file}</p>
                 </button>
               ))}
+              </div>
+
+              <div className="actions flex gap-2">
+                <button
+                className="p-2 px-4 text-white bg-slate-800 rounded-md"
+                onClick={ async () => {
+                 await WebContainer?.mount(fileTree);
+                const installProcess = await WebContainer.spawn('npm' ,["install"])
+                 installProcess.output.pipeTo(new WritableStream({
+                        write(chunk){
+                            console.log(chunk.toString())
+                        }
+                 }))
+
+                 if(runProcess){
+                    runProcess.kill();
+                 }
+                 let tempRunProcess = await WebContainer.spawn('npm' ,["start"])
+                 tempRunProcess.output.pipeTo(new WritableStream({
+                        write(chunk){
+                            console.log(chunk.toString())
+                        }
+                 }))
+                 setRunProcess(tempRunProcess);
+                 
+                 WebContainer.on('server-ready' , (port , url)=>{
+                    console.log(`Server is running at ${port} ${url}`);
+                    setiframeUrl(url);
+                 })
+                   
+                }}
+                >
+                    Run Code
+                </button>
+              </div>
             </div>
             <div className="bottom h-full overflow-auto flex-grow bg-slate-50">
             {fileTree[currentFile] && (
@@ -275,8 +313,28 @@ function Project() {
                 </SyntaxHighlighter>
             )}
             </div>
+           
+
           </div>
-        )}
+
+          {iframeUrl && WebContainer &&(
+            <div className="flex min-w-96 flex-col justify-center items-center h-full">
+              <div className="address-bar">
+                <input
+                onChange={(e)=>setiframeUrl(e.target.value)}
+                value={iframeUrl}
+                className="w-full p-2 px-4 bg-slate-200"
+                type="text" name="" id="" />
+              </div>
+              <iframe
+                title="Project Preview"
+                className="w-full h-full"
+                src={iframeUrl}
+            
+              />
+            </div>
+            )}
+        
       </section>
 
       {isModalOpen && (
